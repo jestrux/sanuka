@@ -6,7 +6,7 @@
 ### How do I get set up? ###
 
 * run npm install
-* run bower
+* run bower install
 * run npm start
 * open browser on localhost:5000
 * open another browser or tab on that port and start chatting
