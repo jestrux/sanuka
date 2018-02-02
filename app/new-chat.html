@@ -1,0 +1,210 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
+
+<link rel="import" href="whisper-shout-button.html">
+<link rel="import" href="emoji-toggle.html">
+<link rel="import" href="attachment-picker.html">
+<dom-module id="new-chat">
+  <template>
+    <style>
+      :host {
+        @apply(--layout);
+        @apply(--layout-center);
+        /*position: absolute;
+        bottom: 0; left: 0;*/
+        width: calc(100% - 16px); 
+        min-height: 65px;
+        background: #333;
+        box-shadow: 0px -3px 3px -2px rgba(0, 0, 0, 0.06);
+        z-index: 99999;
+        padding: 0 8px;
+        cursor: default;
+      }
+      #inputcontainer{
+        margin-left: 5px;
+        @apply(--layout);
+        @apply(--layout-center);
+        @apply(--layout-flex);
+        background: #434343;
+        border-radius: 20px;
+      }
+      input{
+        /*margin: 10px 0;*/
+        width: 100%;
+        @apply(--layout-flex);
+        border:none; 
+        background: transparent;
+        /*padding: 0;*/
+        color: #999;
+        min-height: 35px;
+        /*background-color: red;*/
+        padding: 0 9px;
+        border-radius: 20px 0 0 20px;
+      }
+      ::-webkit-input-placeholder {
+         color: #666;
+      }
+
+      :-moz-placeholder { /* Firefox 18- */
+         color: #666;  
+      }
+
+      ::-moz-placeholder {  /* Firefox 19+ */
+         color: #666;  
+      }
+
+      :-ms-input-placeholder {  
+         color: #666;  
+      }
+      input:focus, input:active, button:focus, button:active{
+        outline: none;
+      }
+      button{
+        @apply(--layout);
+        @apply(--layout-center-center);
+        background: transparent;
+        border:none;
+        width:45px; height: 45px;
+        color: #888;
+      }
+      button.pressed{
+        color: #bbb;
+      }
+      button:disabled{
+        color: #444;
+      }
+      #send-container{
+        @apply(--layout);
+        @apply(--layout-center-center);
+      }
+      whisper-shout-button{
+        position: relative;
+        margin-left: 15px;
+        margin-right: 0;
+      }
+    </style>
+    <div style="padding: 5px; min-width:35px;text-align: center;">
+      <attachment-picker></attachment-picker>
+    </div>
+    <div id="inputcontainer">
+      <input
+        autofocus      
+        value="{{newchat.content::input}}" 
+        placeholder="your message" 
+        style$="font-size: {{_getSize(weight)}}" />
+
+        <emoji-toggle draggable="false" on-changed="toggleEmojify"></emoji-toggle>
+    </div>
+    <div id="send-container" styl="padding-right: 40px;">
+      <whisper-shout-button
+        isdisabled="{{_setDisability(newchat.content)}}"
+        on-change="newWeight" 
+        on-released="sendMessage"
+        hold="{{held}}"></whisper-sohut-button>
+    </div>
+  </template>
+  <script src="../bower_components/emoji-translate/emoji-translate.js"></script>
+  <script>
+    Polymer({
+      is: 'new-chat',
+
+      listeners: {
+        'keyup': '_onKeyup'
+      },
+
+      properties: {
+        newchat : {
+          value: function(){
+            return {content: null}
+          },
+          notify: true
+        },
+        color: {
+          notify: true,
+          value: "#ddd"
+        },
+        weight: {
+          notify: true,
+          value: 9
+        },
+        downTime: {
+          notify: true
+        },
+        emojify: {
+          value: false
+        }
+      },
+
+      _onKeyup: function(e){
+        var newtext = this.newchat.content;
+        var isNull = this._setDisability(newtext);
+
+        if(!isNull){
+          if(e.code == "Enter")
+            this.sendMessage();
+          else if(e.code == "Space" && this.emojify){
+            var sentence = this.newchat.content;
+            this.set("newchat.content", this._emojiFiedSentence(sentence));
+          }
+        }
+      },
+      newWeight: function(e){
+        this.weight = e.detail.value;
+      },
+      _getSize: function(weight){
+        return parseFloat(2 * weight) + "px";
+      },
+      
+      toggleEmojify: function(e){
+        this.emojify = e.detail.val;
+      },
+
+      sendMessage : function(){
+        var content = this.newchat.content;
+
+        if(this.weight > 20 && content.length > 10)
+          var content = content.substring(0, 10)+"...";
+
+        var emojifiedContent = this._emojiFiedSentence(content);
+
+        if(this.emojify)
+          content = emojifiedContent;
+      
+        var text = {
+          sentAt: new Date(),
+          weight: this.weight,
+          content: content
+        }
+
+        this.fire('message-submit', {chat: text});
+        this.weight = 10;
+        this.set("newchat.content", "");
+      },
+
+      _setDisability: function(text){
+        return !(text != undefined && text != null && text.length > 0);
+      },
+      _emojiFiedSentence: function(text) {
+        var emojiFiedSentence = "";
+        var allLines = text.split('\n');
+        for (var line = 0; line < allLines.length; line++ ){
+          if (allLines[line] == '')
+            continue
+
+          var words = allLines[line].split(' ');
+          // Re-add the translated words.
+          for (var i = 0; i < words.length; i++ ) {
+            var emoji = getMeAnEmoji(words[i]);
+            var word = emoji.length ? emoji : words[i];
+            
+            emojiFiedSentence +=" ";
+            emojiFiedSentence += word;
+          }
+        }
+
+        return emojiFiedSentence.trim() + " ";
+      }
+    });
+  </script>
+</dom-module>

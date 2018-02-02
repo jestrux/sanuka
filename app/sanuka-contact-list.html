@@ -1,0 +1,72 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="empty-screen.html">
+<link rel="import" href="sanuka-chat-item.html">
+
+<dom-module id="sanuka-contact-list">
+	<template>
+		<style>
+			:host {
+				@apply(--layout-vertical);
+			  	position: relative;
+			  	overflow: auto;
+			  	overflow-x: hidden;
+			  	height: calc(100% - 60px);
+			  	width: 100%;
+			  	/*background-color: blue;*/
+			}
+			sanuka-chat-item.is-selected{
+				background-color: rgba(198,198,198,0.03);
+				transition: all 0.25s ease-in;
+			}
+			#nocontacts{
+		        --icon-color: #222;
+		        --message-color: #333; 
+		        --icon-size: 60px;
+		        --empty-screen-message:{
+		        }
+		    }
+		</style>
+		<template is="dom-if" if={{!contacts.length}}>
+			<empty-screen
+              id="nocontacts"
+              message="Invite some friends"
+              icon="accounts-add">
+            </empty-screen>
+		</template>
+
+		<template is="dom-if" if={{contacts.length}}>
+            <template is="dom-repeat" items={{contacts}} 
+              as=item index-as=index>
+              <sanuka-chat-item
+				title="{{item.name}}"
+				time="{{item.time}}"
+				color="{{item.color}}"
+				subtitle="{{item.desc}}"
+				on-tap="viewContact">
+				</sanuka-chat-item>
+            </template>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'sanuka-contact-list',
+			properties:{
+				contacts: {
+		          notify: true,
+		          value: new Array()
+		        },
+		        curidx: {
+		        	value: -1
+		        }
+			},
+		    viewContact: function(e){
+		    	// Polymer.dom(e.target).addClass('is-selected');
+		    	// console.log(e.model.node);
+		    	this.fire('selected-changed', {item: e.model.item});
+		    }
+		});
+	</script>
+</dom-module>

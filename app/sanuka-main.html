@@ -1,0 +1,414 @@
+<link rel="stylesheet" href="css/main.css">
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="socket-io.html">
+<link rel="import" href="sanuka-chat-item.html">
+<link rel="import" href="empty-screen.html">
+<link rel="import" href="sanuka-chat-list.html">
+<link rel="import" href="sanuka-contact-list.html">
+<link rel="import" href="sanuka-channel-detail.html">
+
+<dom-module id="sanuka-main">
+  <template>
+    <style>
+      :host {
+        position: absolute;
+        padding: 0;
+        margin:0;
+        height:100vh;
+        width:100vw;
+        /*background-color: red;*/
+        /*display:flex;*/
+        /*align-items:center;*/
+        /*justify-content:center;*/
+        @apply(--layout);
+        @apply(--layout-center-center);
+      }
+      #content-area{
+        width:100%;
+        position: relative;
+      }
+      .content-area{
+        position: relative; 
+        width: 100%; 
+        /*@apply(--layout);*/
+        @apply(--layout-flex);
+        max-height:calc(100% - 120px);
+        overflow:auto;
+      }
+      .conversation{
+        max-height:calc(100%);
+      }
+      .conversation .toolbar{
+        /*-webkit-transform: translateY(-100%);
+        transform: translateY(-100%);*/
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease-in;
+      }
+      .conversation new-chat{
+        opacity: 0;
+        pointer-events: none;
+        /*-webkit-transform: translateY(100%);
+        transform: translateY(100%);*/
+        transition: opacity 0.25s ease-in;
+      }
+
+      .show-bars{
+        pointer-events: auto !important;
+        opacity: 1 !important;
+        -webkit-transform: none !important;
+        transform: none !important;
+      }
+
+      #nocur{
+        --empty-screen-message: {
+          margin-top: -7px;
+        }
+      }
+      #nocur.show-bars{
+        display: none;
+      }
+
+      .chat-list .toolbar{
+        @apply(--layout);
+        @apply(--layout-center);
+        @apply(--layout-justified);
+      }
+      .chat-list .toolbar .title{
+/*        display: none;*/
+          font-size: 25px;
+      }
+
+      .chat-list .toolbar iron-selector{
+        @apply(--layout);
+        @apply(--layout-justified);
+      }
+
+      .chat-list .toolbar button{
+        position: relative;
+        width: 35px;
+        height: 35px;
+        margin: 0 2px;
+        color: #666;
+        @apply(--layout);
+        @apply(--layout-center-center);
+      }
+
+      .chat-list .toolbar button.iron-selected{
+        background: #222;
+      }
+
+      .chat-list .toolbar button .icon{
+        color: #666;
+        font-size: 25px;
+      }
+
+      .chat-list{
+        position: relative;
+      }
+
+      sanuka-chat-list, sanuka-contact-list{
+        display: none;
+      }
+
+      sanuka-chat-list.iron-selected, sanuka-contact-list.iron-selected{
+        display: flex;
+      }
+
+      .badge {
+         position:relative;
+      }
+      .badge[data-badge]:after {
+         content:attr(data-badge);
+         position:absolute;
+         top:-15px;
+         right:-7px;
+         font-size:9px;
+         background:green;
+         color:white;
+         width:15px;height:15px;
+         text-align:center;
+         line-height:16px;
+         border-radius:50%;
+         box-shadow:0 0 1px #333;
+      }
+      .badge[data-badge=””]:after, .badge[data-badge="0"]:after {
+        content: none;
+      }
+    </style>
+
+    <socket-io
+      id="socketio" 
+      socketUrl="http://localhost:5000"
+      on-loggedin="setUpProfile"
+      on-newchat="messageReceived"
+      on-lessuser="userLeft"
+      on-newuser="userJoined"
+      on-connected="onConnected"
+      on-disconnected="onDisconnected">
+    </socket-io>
+    
+    <div class="container">
+      <div class="chat-list">
+        <div class="toolbar">
+          <span class="title">Sanuka</span>
+          <!-- <span id="online-text">{{onlineUsers.length}} online</span> -->
+          <iron-selector 
+            attr-for-selected="data-name"
+            selected="{{tabPage}}">
+            
+            <!-- <button data-name="contacts">
+              <span class="badge" data-badge$="{{onlineUsers.length}}"></span>
+              <paper-ripple></paper-ripple>
+              <span class="icon accounts"></span></button> -->
+
+            <button data-name="contacts">
+              <paper-ripple></paper-ripple>
+              <span class="badge" data-badge$="{{onlineUsers.length}}"></span>
+              <span class="icon accounts"></span></button>
+            
+            <button data-name="chats">
+              <paper-ripple></paper-ripple>
+              <span class="badge" data-badge$="{{chats.length}}"></span>
+              <span class="icon comment-outline"></span></button>
+          </iron-selector>
+        </div>
+
+        <iron-selector 
+          attr-for-selected="data-name"
+          selected="{{tabPage}}" 
+          style="width:100%;  height:100%;">
+
+          <sanuka-contact-list
+            data-name="contacts"
+            contacts="{{onlineUsers}}"
+            on-selected-changed="viewChannelFromContact">
+            </sanuka-contact-list>
+
+          <sanuka-chat-list
+              data-name="chats"
+              chats="{{chats}}"
+              curidx="{{curChatIdx}}">
+              </sanuka-chat-list>
+        </iron-selector>
+      </div>
+      <div id="chatarea" class="conversation">
+        <template is="dom-if" if={{!curChannelExists}}>
+          <empty-screen
+            id="nocur"
+            class$="{{showClass(curChannel)}}"
+            message="open on a chat to start"
+            icon="labels">
+          </empty-screen>
+        </template>
+
+        <template is="dom-if" if={{curChannelExists}}>
+          <sanuka-channel-detail
+            id="chatDetail"
+            channel$="{{_getCurChannel(chats.*, curChatIdx)}}"
+            on-newtext="sendMessage">
+            </sanuka-channel-detail>
+        </template>
+      </div>
+    </div>
+    <audio id="newtext" src="newtext.mp3"></audio>
+    <audio id="newvideo" src="newvideo.mp3"></audio>
+  </template>
+  <script>
+    Polymer({
+      is: 'sanuka-main',
+      properties: {
+        tabPage: {
+          notify: true,
+          value: "chats",
+          observer: "tabPageChanged"
+        },
+        chats: {
+          notify: true,
+          value: new Array()
+        },
+        curChatIdx: {
+          notify: true,
+          value: -1
+        },
+        curChannelExists: {
+          notify: true,
+          computed: "_checkCurChannel(curChatIdx)"
+        },
+        onlineUsers: {
+          notify: true,
+          value: new Array()
+        },
+        texts: {
+          notify: true,
+          value: new Array()
+        },
+        connected:{
+          notify: true,
+          value: false
+        },
+        user:{
+          notify: true,
+          value: null
+        }
+      },
+
+      _getCurChannel: function(chats, idx){
+        return chats.base[idx];
+      },
+
+      _checkCurChannel: function(idx){
+        return idx != -1;
+      },
+
+      tabPageChanged: function(){
+        console.log(this.tabPage);
+      },
+
+      setUpProfile: function(e){
+        var user = e.detail.data.user;
+        var users = e.detail.data.users;
+        users.splice(users.indexOf(user), 1);
+
+        this.set("user", user);
+        this.set("onlineUsers", users);
+      },
+
+      onConnected:function(){
+        this.connected = true;
+        console.log("Connected to server");
+      },
+
+      onDisconnected:function(){
+        this.set("chats", []);
+        this.set("curChatIdx", -1);
+        this.connected = false;
+        console.log("Disconnected from server");
+      },
+
+      userJoined: function(e){
+        var user = e.detail.data.user;
+
+        if(this.user && (user.id != this.user.id))
+          this.push("onlineUsers", user);
+      },
+
+      userLeft: function(e){
+        var deserter = e.detail.data.user;
+
+        if(this.onlineUsers){
+          var onlineUsers = this.onlineUsers;
+          for (var i = 0; i < onlineUsers.length; i++) {
+            if(onlineUsers[i].id == deserter.id){
+              this.splice("onlineUsers", i, 1);
+              break;
+            }
+          };
+        }
+      },
+
+      getChat: function(id){
+        var chats = this.chats;
+        if(chats == undefined || !chats || !chats.length)
+          return null;
+        else{
+          for (var i = 0; i < chats.length; i++) {
+            if(chats[i].id == id){
+              return i;
+              break;
+            }
+          };
+        }
+      },
+
+      viewChannelFromContact: function(e){
+        var sender = this.user
+        var contact = e.detail.item;
+        var i = -1;
+        var i1 = this.getChat("chat" + sender.id + contact.id);
+        var i2 = this.getChat("chat" + contact.id + sender.id);
+
+        if(i1 == null && i2 == null){
+          i = this.chats.length;
+          var chat = new Object();
+          var chat_users = new Array();
+          chat_users.push(sender.id);
+          chat_users.push(contact.id);
+
+          chat.id = "chat" + sender.id + contact.id;
+          chat.color = contact.color;
+          chat.name = contact.name;
+          chat.texts = new Array();
+          chat.last_text = "";
+          chat.users = chat_users;
+
+          this.push("chats", chat);
+          console.log("View chat " + i);
+        }else{
+          i = i1 == null ? i2 : i1;
+
+          console.log("View chat " + i);
+        }
+
+        this.set("curChatIdx", i);
+        this.set("tabPage", "chats");
+        // this.$.chatDetail.setChannel(this.chats[i]);
+      },
+
+      viewChannel: function(e){
+        var channel = e.detail.idx;
+        
+        
+        this.set("curChannel", channel);
+        this.set("texts", this.curChannel.texts);
+      },
+
+      messageReceived: function(e){
+        var sender = e.detail.data.from;
+        var message = e.detail.data.message;
+        message.mine = "";
+        this.$.newtext.play();
+
+        var i = this.getChat(sender.id);
+
+        if(i == null){
+          var chat = sender;
+          chat.texts = new Array();
+          chat.texts.push(message);
+          chat.last_text = message.content;
+          this.push("chats", chat);
+        }else{
+          this.push("chats."+i+".texts", message);
+          this.set("chats."+i+".last_text", message.content);
+        }
+
+        console.log(sender, message);
+        // newchat
+      },
+
+      sendMessage: function(e){
+        var text = e.detail.text;
+
+        this.push("chats."+this.curChatIdx+".texts", text);
+        this.set("chats."+this.curChatIdx+".last_text", text.content);
+        
+
+        this.$.socketio.emit("open-chat", {receiver: this.chats[this.curChatIdx], message: text});
+        // console.log(this.chats[this.curChatIdx]);
+      },
+
+      showClass: function(curChannel){
+        if(curChannel != null){
+          setTimeout(function(){
+            this.$.chatarea.style.overflowY = "visible";
+          }.bind(this), 400);
+        }
+        return curChannel != null ? 'show-bars' : '';
+      }
+    });
+  </script>
+</dom-module>

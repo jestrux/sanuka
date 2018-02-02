@@ -1,0 +1,181 @@
+<dom-module id="emoji-toggle">
+	<template>
+		<style>
+			:host {
+				border-radius: 50%;
+		        position: relative;
+		        height: 30px; width: 30px;
+		        margin-right: 6px;
+		        color: rgba(0,0,0,0.5);
+		        @apply(--layout);
+		        @apply(--layout-center-center);
+			}
+			:host(.dragging.on){
+				@apply(--layout-end-justified);
+			}
+			:host(.dragging.off){
+				@apply(--layout-start-justified);
+			}
+			:host(.dragging){
+				border-radius: 30px;
+				height: 28px;
+				width: 45px;
+				padding:0 5px;
+				background-color: #393939;
+			}
+			:host(.dragging) paper-ripple{
+				display: none;
+			}
+			#icon{
+				/*font-size: 25px;*/
+        		margin: 0;
+        		margin-left: -2px; 
+        		padding: 0;
+        		color: #666;
+        		border: none;
+        		height: 24px !important;
+        		width: 24px;
+        		@apply(--layout);
+		        @apply(--layout-center-center);
+        	}
+        	:host(.on) #icon{
+        		color: #888;
+        	}
+        	:host(.dragging) #icon{
+        		transition-property: -webkit-transform;
+		        transition-property: transform;
+		        transition-duration: 0.15s;
+		        transition-timing-function: ease-out;
+			}
+			.icon{
+				font-size: 20px;
+				/*margin-bottom: 5px;*/
+			}
+		</style>
+		<paper-ripple></paper-ripple>
+		<button draggable="false" id="icon">
+          <span class="icon mood"></span>
+        </button>
+	</template>
+	<script>
+		Polymer({
+			is: 'emoji-toggle',
+
+			listeners: {
+		        'track': '_onTrack',
+		        'down': '_onDown',
+		        'up': '_onUp',
+		    },
+
+			properties: {
+				value: {
+					notify: true,
+					value: false,
+					observer: "valueChanged"
+				}
+			},
+			ready: function(){
+				this._setupClasses(this.value);
+			},
+			valueChanged: function(){
+				this._setupClasses(this.value);
+			},
+			_setupClasses: function(value){
+				var state = value ? "on" : "off";
+
+				this.classList.remove("on");
+				this.classList.remove("off");
+				this.classList.add(state);
+			},
+			_onDown: function(event) {
+		    	this.down = true;
+		    	//mimic hold
+		    	setTimeout(function(){
+		    		if(this.down == true){
+		    			this.down = false;
+		    			this.classList.add('dragging');
+		    		}
+		    	}.bind(this), 250);
+		    },
+
+		    _onUp: function(event) {
+		    	if(this.down){
+		    		this.down = false;
+		    		// this.fire('released');
+		    		console.log("show emojilist");
+		    	}
+		    	
+		    	if(!this.dragging)
+		    		this.classList.remove('dragging');
+		    },
+
+			_onTrack: function(event, detail){
+				event.stopPropagation();
+
+				if(this.down)
+					return;
+		        switch (event.detail.state) {
+		          case 'start':
+		            this._trackStart(event);
+		            break;
+		          case 'track':
+		            this._track(event, detail);
+		            break;
+		          case 'end':
+		            this._trackEnd();
+		            break;
+		        }
+			},
+
+			_trackStart: function(event) {
+		    	this._w = this.offsetWidth;
+        		this._x = this.value ? this._w - 5 : 5;
+		        this._minx = this.value ? -25 : 0;
+		        this._maxx = this.value ? 0 : 25;
+
+		        this.dragging = true;
+		        this.down = false;
+		    },
+
+		    _track: function(e) {
+		        if (!this.dragging) {
+		          this._trackStart(e);
+		        }
+
+		        var dx = e.detail.dx;
+		        var val = this._x = Math.min(this._maxx, Math.max(this._minx, dx));
+
+				// var s = this.$.icon.style;
+				// if(this.state == "off")
+				// 	var val = Math.min(10, Math.max(0, dx));
+				// else
+				// 	var val = Math.min(10, Math.max(0, dx));
+
+				// this._x += val;
+				this.translateIcon(val);
+		    },
+
+		    translateIcon: function(dx){
+		        var s = this.$.icon.style;
+
+		        if(!dx)
+		    		var transform = 'none';
+		    	else
+		        	var transform = 'translateX(' + dx + 'px)';
+
+		        s.transform = s.webkitTransform = transform;
+		    },
+
+		    _trackEnd: function() {
+		    	this.translateIcon(false);
+		        this.dragging = false;
+		        this.classList.remove('dragging');
+
+		        var value = (this._x + 12) > (this._w - 10) / 2;
+
+		        this.set("value", value);
+		    	this.fire('changed', {val: value});
+		    }
+		});
+	</script>
+</dom-module>

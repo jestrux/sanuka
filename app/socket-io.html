@@ -1,0 +1,186 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<script src="../socket.io/socket.io.js"></script>
+
+<dom-module id="socket-io">
+	<script>
+		Polymer({
+			is: 'socket-io',
+			attached:function(){
+				// console.log("We are live!");
+			    window.onbeforeunload = this.beforeUnload.bind(this);
+	        	this.init();
+	        	// if(this.autoConnect) this.connect();
+		    },
+			properties:{
+				socketUrl: {
+					notify: true,
+					value: ""
+				},
+				namespace: {
+					value : "/"
+				},
+				autoConnect: {
+					notify: true,
+					value: true
+				},
+				autoReConnect: {
+					notify: true,
+					value: true
+				},
+				connected: {
+					notify: true,
+					value: null
+				},
+				_connected: {
+					notify: true,
+					value: false
+				},
+				outEventName: {
+					notify: true,
+					value: "message"
+				},
+				outMessage: {
+					notify: true,
+					value: null
+				},
+				inMessage: {
+					notify: true,
+					value: null
+				},
+				ws: {
+					notify: true,
+					observer: "wsToChanged",
+				},
+			    listenTo: {
+			    	notify: true,
+			    	observer: "listenToChanged",
+			    	value: function(){
+			    		return ["loggedin", "newuser", "lessuser", "newchat"];
+			    	}
+			    }
+			},
+			init:function(){
+		        if(window.io == undefined) throw new Error("Could not import socket.io library");
+		        
+		        var manager = this.manager = io.Manager( this.socketUrl, {autoConnect: this.autoConnect, reconnection:this.autoReConnect});
+		        this.set("ws" , manager.socket(this.namespace));
+		        
+				manager.on('open', this.onConnect.bind(this));
+				manager.on('close', this.onDisconnect.bind(this));
+				manager.on('error', this.onError.bind(this));
+				manager.on('connect_failed', this.onError.bind(this));
+				manager.on('connect_timeout', this.onError.bind(this));
+				manager.on('reconnect_failed', this.onReconnectFailed.bind(this));
+				manager.on('reconnect_error', this.onError.bind(this));
+		    },
+			emit: function(event, data){
+				  // console.log("sending '"+event+ "'via polymer-socket-io: data", data);
+				  try{
+					  if(this.ws) this.ws.emit(event, data);
+				  }catch(error){
+					  console.log("cannot send message: error:"+error);
+				  }
+			},
+			connect:function(){
+			    this.disconnect();
+				this.ws.connect();
+			},
+			disconnect:function(){
+			    if (this.ws != undefined && !this._connected){
+			  		try{
+			    		this.ws.disconnect();
+			  		}
+			  		catch(error){
+			    		this.onError(error);
+			  		}
+				}
+			},
+			//change handlers
+			wsToChanged : function(){
+				if(this.ws !== undefined){
+					for(var i=0;i<this.listenTo.length;i++){
+					    var messageName = this.listenTo[i];
+					    this.ws.on(messageName, this.onMessageReceived.bind(this, messageName));
+					}
+				}
+			},
+			_connectedChanged: function(oldValue){
+				this.connected = this._connected;
+			},
+			outMessageChanged: function(){
+				if(this.outMessage){
+				  var fullMessage = this.outMessage;
+				  var eventName = this.outEventName;
+
+				  if( this.outMessage instanceof Object ){
+				    if("event" in fullMessage)
+				    {
+				      eventName = fullMessage.event;
+				      fullMessage = fullMessage.data;
+				    }
+				  }  
+				  
+				  this.emit(eventName, fullMessage);
+				}
+			},
+			socketUrlChanged: function() {
+				if(this._connected ) this.connect();
+			},
+			namespaceChanged:function() {
+				if(this._connected ) this.connect();
+			},
+
+			listenToChanged: function(oldListenTo){
+				if(this.ws !== undefined){
+					console.log("listenToList changed", this.listenTo);
+					if(oldListenTo){
+					    for(var i=0;i<oldListenTo.length;i++){
+					      var messageName = oldListenTo[i];
+					      console.log(messageName);
+					      this.ws.removeAllListeners(messageName);
+					    } 
+					}
+					for(var i=0;i<this.listenTo.length;i++){
+					    var messageName = this.listenTo[i];
+					    console.log(messageName);
+					    this.ws.on(messageName, this.onMessageReceived.bind(this, messageName));
+					}
+				}
+			},
+			//event handlers
+			onConnect:function(event){
+				this._connected = true;
+				this.fire('connected');
+			},
+			onDisconnect:function(event){
+				this._connected = false;
+				this.fire('disconnected');
+			},
+			onError:function (error){
+			    console.error('Error in polymer-socket-io',error);
+			},
+			onReconnectFailed:function (error){
+			    console.error('Reconnect failed polymer-socket-io',error);
+			},
+			onMessageReceived:function(event, msg){
+				this.fire(event, {data: msg});
+			},
+			beforeUnload: function(event) {
+			    this.disconnect();
+			    console.log("before unload");
+				this.manager.removeAllListeners('connect');
+				this.manager.removeAllListeners('disconnect');
+				this.manager.removeAllListeners('error');
+				this.manager.removeAllListeners('connect_failed');
+
+				for(var i=0;i<this.listenTo.length;i++){
+					var messageName = this.listenTo[i];
+					this.ws.removeAllListeners(messageName)
+				}
+
+				this.ws = null;
+				this.manager = null;
+			}
+		});
+	</script>
+</dom-module>

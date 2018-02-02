@@ -1,0 +1,93 @@
+<script src="../node_modules/moment/moment.js"></script>
+<script>
+	window.SanukaBehaviors = window.SanukaBehaviors || {};
+
+	SanukaBehaviors.formattedTimeBehavior = {
+		properties: {
+			time: {
+				notify: true,
+				value: null
+			},
+			diffTime: {
+				notify: true,
+				computed: "_getHumanDiffTime(time)"
+			}
+		},
+		_getHumanDiffTime: function(time){
+			if(!time || time == null || time == undefined)
+				return "unkown";
+
+			var time = new Date(time);
+
+			const FORMAT_TODAY = 0; //show time sent
+			const FORMAT_YESTERDAY = 1; //show hours
+			const FORMAT_SAME_WEEK = 2; //show number of days
+			const FORMAT_SAME_MONTH = 3; //show day and date
+			const FORMAT_SAME_YEAR = 4; //show date and month
+			const FORMAT_OTHER_YEAR = 5; //show month and year
+			
+			var monthlist = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+			var daylist = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+			var date = new Date(time);
+			var hr = date.getHours();
+			var min = date.getMinutes();
+			var ampm = hr >= 12 ? 'PM' : 'AM';
+			var hour = hr == 12 ? 12 : hr % 12;
+			var clock = hour + ':' + min + ' ' + ampm;
+
+			var time_diff = Date.now() - date;
+			var day_diff = time_diff / 86400000;
+			var format;
+			var diff_time;
+
+			if(day_diff <= 1)
+				format = FORMAT_TODAY;
+
+			else if(day_diff > 0 && day_diff < 2)
+				format = FORMAT_YESTERDAY;
+
+			else if(day_diff >= 2 && day_diff < 7)
+				format = FORMAT_SAME_WEEK;
+
+			else if(day_diff >= 7 && day_diff < 28)
+				format = FORMAT_SAME_MONTH;
+
+			else if(day_diff >= 28 && day_diff < 365)
+				format = FORMAT_SAME_YEAR;
+
+			else if(day_diff >= 365)
+				format = FORMAT_OTHER_YEAR;
+
+			console.log(day_diff);
+
+			switch(format){
+				case FORMAT_TODAY : {
+					diff_time = moment(time).startOf("hour").fromNow();
+
+					break;
+				}
+				case FORMAT_SAME_WEEK : {
+					diff_time = moment(time).startOf("hour").fromNow();
+					break;
+				}
+				case FORMAT_SAME_MONTH : {
+					diff_time = parseInt(day_diff / 7) + "w";
+					break;
+				}
+				case FORMAT_SAME_YEAR : {
+					diff_time = moment(time).format("MMM Do");
+					break;
+				}
+				case FORMAT_OTHER_YEAR : {
+					diff_time = moment(time).format("MMM Do");
+
+					break;
+				}
+			}
+
+			console.log(diff_time);
+			return diff_time;
+		}
+	}
+</script>

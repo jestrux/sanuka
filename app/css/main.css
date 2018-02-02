@@ -1,0 +1,173 @@
+@import url(mdicons.css);
+@font-face {
+  font-family: elegant;
+  src: url(../font/elegant.ttf);
+}
+
+@font-face {
+  font-family: mdi;
+  src: url(../font/mdi2.ttf);
+}
+
+@font-face {
+  font-family: roboto;
+  src: url(../font/roboto.ttf);
+}
+
+body {
+  background: #f9f9f9;
+  padding: 0;
+  margin: 0;
+}
+
+*:not(.icon):before {
+  content: "" !important;
+}
+
+button, button:focus, button:active {
+  outline: none !important;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+.text {
+  font-family: roboto;
+}
+
+.icon {
+  font-family: mdi;
+  font-size: 25px;
+}
+
+.accent-bg {
+  background: #e2bd03;
+}
+
+.accent-bg:disbled {
+  background: #4a4325;
+}
+
+.accent-color {
+  color: #fde573;
+}
+
+.layout.center-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  height: calc(100vh - 40px);
+  width: calc(100% - 40px);
+  max-width: 1000px;
+  max-height: 560px;
+  margin: 20px;
+  background: #1a1a1a;
+  overflow: hidden;
+}
+
+.container .toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a1a;
+  font-size: 20px;
+  padding: 1px 20px;
+  height: 60px;
+  border-bottom: 1px solid #222;
+  color: #fde573;
+  font-family: elegant;
+  z-index: 1;
+  position: relative;
+  width: calc(100% - 40px);
+}
+
+.container .toolbar .title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+}
+
+.container .toolbar .title span:first-letter {
+  text-transform: uppercase !important;
+}
+
+.container .toolbar .title em {
+  margin-top: -4px;
+  font-size: 15px;
+  color: #4a4a4a;
+  font-family: roboto;
+  font-style: normal;
+}
+
+.container .chat-list {
+  width: 30%;
+  border-right: 1px solid #222;
+  min-width: 320px;
+  height: 100%;
+  overflow: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.container .chat-list .content-area {
+  flex: 1;
+}
+
+.container .conversation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: relative;
+  flex: 1;
+  background: #222;
+  background-image: url(../images/blackbg.jpg);
+  overflow: hidden !important;
+}
+
+.container .conversation .toolbar {
+  box-shadow: 0px 4px 3px -2px rgba(0, 0, 0, 0.06);
+}
+
+.container .conversation #content-area {
+  flex: 1;
+}
+
+.container .conversation .title {
+  margin-top: 5px;
+}
+
+sanuka-chat-item {
+  border-bottom: 1px solid #202020;
+}
+
+#online-text {
+  background: #ff0000;
+  padding: 5px 10px;
+  font-size: 20px;
+}
+
+.avatar {
+  height: 40px;
+  width: 40px;
+  background: #222;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.avatar.no-default {
+  background: transparent;
+}

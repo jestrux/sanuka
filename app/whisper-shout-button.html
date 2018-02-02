@@ -1,0 +1,243 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<dom-module id="whisper-shout-button">
+	<template>
+		<style>
+			:host {
+				display: block;
+				@apply(--layout);
+		        @apply(--layout-center-center);
+
+		        position: absolute;
+		        right:8px;
+		        width: 40px;
+		        height: 40px;
+		        border-radius: 50%;
+		        overflow: hidden;
+
+		        /*lg(#F09819, #EDDE5D)*/
+		        /*background-color: var(--whisper-shout-background-color, #999);*/
+		        @apply(--whisper-shout);
+			}
+			:host(.isdisabled){
+				/*background: var(--whisper-shout-disbled-background-color, #444);*/
+				@apply(--whisper-shout-disabled);
+			}
+			:host(.dragging){
+				border-radius: 25px;
+		    	height: 80px;
+		        overflow: hidden;
+		        width: 35px;
+				background: var(--whisper-shout-dragging-background-color, #bbb);
+				@apply(--whisper-shout-dragging);
+			}
+			:host(.dragging) #sendbtn{
+		        transition-property: -webkit-transform;
+		        transition-property: transform;
+		        transition-duration: 0.1s;
+		        transition-timing-function: ease-out;
+
+		        color: var(--whisper-shout-dragging-icon-color, #222);
+		        @apply(--whisper-shout-dragging-icon);
+		    }
+			#sendbtn{
+		        @apply(--layout);
+		        @apply(--layout-center-center);
+		        background: transparent;
+		        border:none;
+		        /*width:45px; height: 45px;*/
+		        padding: 0;
+		        color: #999;
+		        border-radius: 50%;
+
+		        /*color: var(--whisper-shout-icon-color, #333);*/
+		        @apply(--whisper-shout-icon);
+		    }
+		    #sendbtn:active, #sendbtn:focus{
+		    	outline: none;
+		    }
+		    #sendbtn:disabled{
+		        /*color: var(--whisper-shout-disabled-icon-color, #555);*/
+		        color: #444;
+		        @apply(--whisper-shout-disabled-icon);
+		    }
+		    .icon{
+		    	font-size: var(--whisper-shout-icon-size, 24px);
+		    }
+		</style>
+		<button id="sendbtn" disabled$="{{!newchat.content.length}}" on-down="_onDown" on-up="_onUp" on-track="_onTrack">
+			<paper-ripple></paper-ripple>
+          <span class="icon mail-send"></span>
+        </button>
+	</template>
+	<script>
+		Polymer({
+			is: 'whisper-shout-button',
+			properties: {
+				isdisabled: {
+					type: Boolean,
+					value: false,
+					notify: true,
+					reflectToAttribute: true,
+					observer: "disabledChanged"
+				},
+				value: {
+				  type: Number,
+				  value: 8,
+				  notify: true,
+				  reflectToAttribute: true
+				},
+
+				min: {
+				  type: Number,
+				  value: -3,
+				  notify: true
+				},
+
+				max: {
+				  type: Number,
+				  value: 35,
+				  notify: true
+				},
+
+				step: {
+				  type: Number,
+				  notify: true,
+				  value: 1
+				},
+
+				ratio: {
+				  type: Number,
+				  value: 0,
+				  readOnly: true,
+				  notify: true
+				},
+
+				immediateValue: {
+		          type: Number,
+		          value: 0,
+		          readOnly: true,
+		          notify: true
+		        },
+			},
+
+			disabledChanged: function(){
+				if(this.isdisabled){
+					this.classList.add('isdisabled');
+					this.$.sendbtn.setAttribute('disabled', 'true');
+				}
+				else if(!this.isdisabled){
+					this.classList.remove('isdisabled');
+					this.$.sendbtn.removeAttribute('disabled');
+				}
+			},
+
+			_calcRatio: function(value) {
+			    return (this._clampValue(value) - this.min) / (this.max - this.min);
+			},
+
+			_clampValue: function(value) {
+			    return Math.min(this.max, Math.max(this.min, this._calcStep(value)));
+			},
+			
+			_calcStep: function(value) {
+			    value = parseFloat(value);
+			    return this.step ? ((value + this.min) / this.step -
+			        (this.min / this.step)) / (1 / this.step) : value;
+			},
+
+			_calcKnobPosition: function(ratio) {
+		        return (this.max - this.min) * ratio + this.min;
+		    },
+
+		    _calcYPos: function(ratio, h) {
+		    	this.ratio = ratio;
+		        return (h - 0) * ratio + 0;
+		    },
+
+		    _onDown: function(event) {
+		    	this.down = true;
+		    	//mimic hold
+		    	setTimeout(function(){
+		    		if(this.down == true)
+		    			this.classList.add('dragging');
+		    	}.bind(this), 200);
+		    },
+
+		    _onUp: function(event) {
+		    	if(this.down){
+		    		this.down = false;
+		    		this.classList.remove('dragging');
+		    		this.fire('released');
+		    	}
+		    },
+
+			_onTrack: function(event, detail) {
+		        event.stopPropagation();
+		        switch (event.detail.state) {
+		          case 'start':
+		            this._trackStart(event);
+		            break;
+		          case 'track':
+		            this._trackY(event, detail);
+		            break;
+		          case 'end':
+		            this._trackEnd();
+		            break;
+		        }
+		    },
+
+		    _trackStart: function(event) {
+		    	this._h = this.offsetHeight;
+        		this._y = this._calcYPos(0.5, this._h);
+		        this._starty = this._y;
+		        this._knobstarty = this._starty;
+		        this._miny = - this._starty + 18;
+		        this._maxy = this._h - this._starty - 18;
+
+		        this._startv = this._v = this.value;
+		        this._minv = - this._startv + 1;
+		        this._maxv = this.max - this._startv;
+
+		        this.classList.add('dragging');
+		        this.dragging = true;
+		    },
+
+		    _trackY: function(e) {
+		        if (!this.dragging) {
+		          this._trackStart(e);
+		        }
+
+		        var dy = Math.min(this._maxy, Math.max(this._miny, e.detail.dy));
+		        this._y = this._starty + dy;
+
+		        var immediateValue = this._calcStep(this._calcKnobPosition(this._y / this._h));
+		        this._setImmediateValue(immediateValue);
+
+		        this.translateBtn(dy);
+		        // console.log(this.immediateValue * 2.8);
+		        this.fire('change', {value: this.immediateValue});
+		    },
+
+		    translateBtn: function(dy){
+		    	// console.log(dy);
+		        var s = this.$.sendbtn.style;
+		        var transform = 'translateY(' + dy + 'px)';
+
+		        s.transform = s.webkitTransform = transform;
+		    },
+
+		    _trackEnd: function() {
+		        var s = this.$.sendbtn.style;
+		        s.transform = s.webkitTransform = '';
+
+		        this.dragging = false;
+		        this.classList.remove('dragging');
+		        this._setImmediateValue(0);
+		        // this.fire('released');
+		        this.down = false;
+		    }
+		});
+	</script>
+</dom-module>

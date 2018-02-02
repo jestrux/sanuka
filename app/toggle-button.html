@@ -1,0 +1,114 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="stylesheet" href="css/main.css">
+
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<dom-module id="toggle-button">
+	<template>
+		<style>
+			:host {
+				@apply(--layout);
+				@apply(--layout-center-center);
+				
+				height: 40px; width: 40px;
+				z-index: 9999999;
+			}
+			#button{
+				color: #f1f1f1;
+				height: 40px; width: 40px;
+
+				-webkit-transform: rotate(-20deg);
+				-ms-transform: rotate(-20deg);
+				-o-transform: rotate(-20deg);
+				transform: rotate(-20deg);
+
+				transition: transform 0.35s ease;
+			}
+			.icon:before{
+				color: #888;
+				content: '\f10d';
+			}
+			:host(.opened) #button{
+				-webkit-transform: rotate(60deg);
+				-ms-transform: rotate(60deg);
+				-o-transform: rotate(60deg);
+				transform: rotate(60deg);
+			}
+			:host(.opened) button .icon:before{
+				content: '\f136';
+				color: #aaa;
+			}
+		</style>
+		<button id="button" class="fab">
+			<!-- <paper-ripple></paper-ripple> -->
+			<span class="icon close" style="color: #777; font-size:20px;"></span>
+		</button>
+	</template>
+	<script>
+		Polymer({
+			is: 'toggle-button',
+
+			behaviors: [
+		      Polymer.NeonAnimatableBehavior
+		    ],
+
+			listeners: {
+		        'tap': '_onTap'
+		    },
+
+			properties: {
+				opened: {
+					value: false,
+					observer: "openedChanged"
+				},
+				animationConfig: {
+					value: function(){
+						return {
+							'entry': [
+								{
+									'name': 'open-animation',
+									node: this,
+									timing: {duration: 200},
+								}
+							],
+							'exit': [
+								{
+									name: 'close-animation',
+									node: this,
+									timing: {duration: 200}
+								}
+							]
+						}
+					}
+				}
+			},
+			openedChanged: function(){
+				if(this.opened){
+					console.log("Opening");
+					this.classList.add('opened');
+					// this.open();
+				}
+				else{
+					this.classList.remove('opened');
+					// this.close();
+				}
+			},
+			_onTap: function(){
+				this.fire('tapped');
+			},
+			_onNeonAnimationFinish: function(){
+				console.log("All done", this.opened);
+				if(this.opened)
+					this.classList.add('opened');
+				else
+					this.classList.remove('opened');
+			},
+			open: function(){
+				this.playAnimation('entry');
+			},
+			close: function(){
+				this.playAnimation('exit');
+			}
+		});
+	</script>
+</dom-module>

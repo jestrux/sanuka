@@ -1,0 +1,129 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="stylesheet" href="css/main.css">
+
+<dom-module id="sanuka-chat-item">
+	<template>
+		<style>
+			:host {
+				display: flex;
+				-ms-align-items: center;
+				align-items: center;
+				height: 66px;
+				width: 100%;
+				font-family: verdana;
+				position: relative;
+			}
+			.avatar{
+				margin:8px;
+			}
+			.online-icon{
+				margin: 0 8px;
+				background: #169c16; width:10px; height:10px; border-radius:50%; display: inline-block;
+			}
+			.online-icon.online{
+				background: #169c16;
+			}
+			.online-icon.unfocused{
+				background: orange;
+			}
+			.online-icon.offline{
+				background: #f00;
+			}
+			.item-body{
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				width: calc(100% - 85px);
+			}
+			.item-body > span{
+				width: calc(100% - 20px);
+				white-space: nowrap;
+				overflow: hidden;
+				-ms-text-overflow: ellipsis;
+				text-overflow: ellipsis;
+			}
+			.item-body > span:first-child{
+				font-size: 1em;
+				color: #999;
+				display: flex;
+				-ms-align-items: center;
+				align-items: center;
+			}
+			.item-body > span:first-child > span:last-child{
+				margin-left: auto;
+				font-size: 0.7em;
+				color: #777;
+			}
+			.item-body > span:last-child{
+				font-size: 0.8em;
+				color: #777;
+			}
+		</style>
+
+		<div>
+			<div style$="background: {{color}}" class="avatar"></div>
+		</div>
+
+		<div class="item-body">
+			<span>{{title}}<span>{{secondary}}</span></span>
+			<span>{{subtitle}}</span>
+		</div>
+		
+		<template is="dom-if" if={{_knownStatus(status)}}>
+			<div><div class$="online-icon {{status}}"></div></div>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'sanuka-chat-item',
+			
+			properties: {
+				title: {
+					type: String,
+					notify: true
+				},
+				subtitle: {
+					type: String,
+					notify: true
+				},
+				secondary: {
+					type: String,
+					notify: true
+				},
+				status: {
+					type: Boolean,
+					notify: true,
+					computed: "_isOnline(time)"
+				},
+				color: {
+					notify: true,
+					value: null
+				}, 
+				time: {
+					notify: true
+				}
+			},
+			_knownStatus: function(status){
+				return status != null;
+			},
+			_isOnline: function(time){
+				if(!time || time == null || time == undefined)
+					return null;
+
+				var time = new Date(time);
+				var now = new Date();
+				var time_diff = parseInt((now.getTime() - time.getTime()) / 60000);
+
+				if(time_diff < 2)
+					return "online";
+				else if(time_diff >= 2 && time_diff < 8)
+					return "unfocused";
+				else
+					return "offline";
+			}
+		});
+	</script>
+</dom-module>

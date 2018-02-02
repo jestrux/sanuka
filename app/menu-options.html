@@ -1,0 +1,149 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="stylesheet" href="css/main.css">
+
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="open-animation.html">
+<link rel="import" href="close-animation.html">
+<link rel="import" href="icon-animations.html">
+<!-- <link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html"> -->
+<link rel="import" href="../bower_components/neon-animation/neon-animation-runner-behavior.html">
+<dom-module id="menu-options">
+	<template>
+		<style>
+			:host {
+				display: block;
+				left: 0px; top:0px;
+				width: 40px;height: 40px;
+				border-radius: 50%;
+				opacity: 0;
+				pointer-events: none;
+				position: absolute;
+				background-color: rgba(51,51,51, 0.5);
+			}
+			:host(.opened){
+				display: block;
+				width: 340px;height: 340px;
+				opacity: 1;
+				pointer-events: auto;
+				transform: translate3d(-150px, -150px, 0);
+			}
+			.icon{
+				font-size: 30px;
+				color: #888;
+				font-style: normal;
+			}
+			button{
+				top: 10px; left:150px;
+				/*background: red; */
+				position: absolute;
+				width: 45px; height: 45px;
+				transform: rotate(-5deg);
+			}
+			button:nth-child(2){
+				top: 48px;
+				left: 240px;
+			}
+			button:nth-child(3){
+				top: 140px;
+				left: 287px;
+			}
+			button:nth-child(4){
+				top: 175px;
+				left: 345px;
+			}
+			button:nth-child(2) .icon{
+				font-size: 40px;
+			}
+		</style>
+		<button id="btn1" on-tap="_onTap">
+			<i class="icon image"></i>
+		</button>
+
+		<button id="btn2" on-tap="_onTap">
+			<i class="icon gif"></i>
+		</button>
+
+		<button id="btn3" on-tap="_onTap">
+			<i class="icon account"></i>
+		</button>
+
+		<!-- <button id="button">
+			<i class="icon collection-video"></i>
+		</button> -->
+	</template>
+	<script>
+		Polymer({
+			is: 'menu-options',
+
+		    behaviors: [
+		      Polymer.NeonAnimationRunnerBehavior
+		    ],
+
+		    listeners: {
+		      'neon-animation-finish': '_onNeonAnimationFinish',
+		    },
+
+			properties: {
+				opened: {
+					value: false,
+					observer: "openedChanged"
+				},
+				animationConfig: {
+					value: function(){
+						return {
+							'entry': [
+								{
+									'name': 'open-animation',
+									node: this,
+									timing: {duration: 200},
+								},
+								{
+									name: 'fade-in-animation',
+									node: this.$.btn1,
+									timing: {duration: 200, delay: 20}
+								}
+							],
+							'exit': [
+								{
+									name: 'close-animation',
+									node: this,
+									timing: {duration: 200}
+								}
+							]
+						}
+					}
+				}
+			},
+			openedChanged: function(){
+				if(this.opened){
+					console.log("Opening");
+					// this.classList.add('opened');
+					this.open();
+				}
+				else{
+					// this.classList.remove('opened');
+					this.close();
+				}
+			},
+			_onTap: function(e){
+				e.stopPropagation();
+				var id = Polymer.dom(e.currentTarget).node.id;
+				console.log();
+				this.fire('tapped', {'choice': id.substring(3)});
+			},
+			_onNeonAnimationFinish: function(){
+				console.log("All done", this.opened);
+				if(this.opened)
+					this.classList.add('opened');
+				else
+					this.classList.remove('opened');
+			},
+			open: function(){
+				this.playAnimation('entry');
+			},
+			close: function(){
+				this.playAnimation('exit');
+			}
+		});
+	</script>
+</dom-module>

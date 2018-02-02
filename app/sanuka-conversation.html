@@ -1,0 +1,92 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="chat-bubble.html">
+<link rel="import" href="empty-screen.html">
+
+<dom-module id="sanuka-conversation">
+	<template>
+		<style>
+			:host {
+				@apply(--layout-vertical);
+			}
+			chat-bubble[mine="false"] + chat-bubble[mine="true"], 
+			chat-bubble[mine="true"] + chat-bubble[mine="false"]{
+				margin-top: 10px;
+				/*--bubble-radius: 10px 15px 15px 10px;*/
+			}
+
+			chat-bubble[mine="false"] + chat-bubble[mine="false"],
+			chat-bubble[mine="true"] + chat-bubble[mine="true"]{
+				--bubble-dp: {
+					opacity: 0;
+					margin-top: -20px;
+					pointer-events: none;
+				};
+			}, 
+
+			chat-bubble[mine="true"] + chat-bubble[mine="true"]{
+				margin-top: 10px;
+			}
+
+			empty-screen{
+				height: calc(100% - 40px);
+				--empty-screen-message: {
+		          margin-top: -20px;
+		        }
+			}
+		</style>
+		<!-- <chat-bubble
+          class="text mine"
+          bg="red"
+          content="Woura"
+          timestamp=""
+          weight="25"
+          ></chat-bubble>
+
+          <chat-bubble
+          class="text"
+          bg="blue"
+          content="hi"
+          timestamp=""
+          weight="5"
+          ></chat-bubble>
+           -->
+		<template is="dom-if" if={{!texts.length}}>
+        	<empty-screen></empty-screen>
+      	</template>
+    	<template is="dom-if" if={{texts.length}}>
+        	<div class="text" style="color: #999; padding:0 5px;">
+	          	<template is="dom-repeat" items={{texts}} 
+	            as=text index-as=index>
+	              <chat-bubble
+	              class$="text {{text.mine}}"
+	              bg="{{text.color}}"
+	              content="{{text.content}}"
+	              timestamp="{{text.sentAt}}"
+	              weight="{{text.weight}}"
+	              ></chat-bubble>
+	          	</template>
+        	</div>
+      	</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'sanuka-conversation',
+			properties: {
+				user: {
+					notify: true,
+					value: new Object()
+				},
+				forgroup: {
+					notify: true,
+					value: false
+				},
+				texts: {
+					notify: true,
+					type: Array(),
+					value: new Array()
+				}
+			}
+		});
+	</script>
+</dom-module>

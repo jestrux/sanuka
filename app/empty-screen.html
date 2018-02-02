@@ -1,0 +1,45 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<dom-module id="empty-screen">
+	<template>
+		<style>
+			:host {
+				position: absolute;
+				height: 100%;
+				width: 100%;
+				@apply(--layout-vertical);
+				@apply(--layout-center-center);
+				@apply(--empty-screen);
+				overflow: hidden;
+			}
+			#icon{
+				font-size:var(--icon-size, 120px);
+				color: var(--icon-color, #333);
+			}
+			#message{
+				color: var(--message-color, #454545);
+				font-size:var(--message-size, 20px);
+				@apply(--empty-screen-message);
+			}
+		</style>
+
+		<span id="icon" class$="icon {{icon}}"></span>
+    	<span id="message" class="text">{{message}}</span>
+	</template>
+	<script>
+		Polymer({
+			is: 'empty-screen',
+			properties: {
+				icon: {
+					notify: true,
+					value: "landscape"
+				},
+				message: {
+					notify: true,
+					value: "There's nothing here"
+				}
+			}
+		});
+	</script>
+</dom-module>

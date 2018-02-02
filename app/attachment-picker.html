@@ -1,0 +1,89 @@
+<link rel="stylesheet" href="css/main.css">
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../bower_components/neon-animation/neon-animation-runner-behavior.html">
+
+<link rel="import" href="menu-options.html">
+<link rel="import" href="toggle-button.html">
+<dom-module id="attachment-picker">
+	<template>
+		<style>
+			:host {
+				display: block;
+				position: relative;
+				height: 40px; width: 40px;
+			}
+
+			menu-options{
+				position: absolute;
+			}
+
+			toggle-button{
+				position: absolute;
+				border-radius: 50%;
+				/*background-color: #333;*/
+
+				-webkit-transition: transform 0.35s ease;
+				-o-transition: transform 0.35s ease;
+				transition: transform 0.35s ease;
+			}
+		</style>
+
+		<div class$="menu-holder {{_addIsOpenClass(open)}}">
+		    <menu-options opened="{{!_isOpen(open)}}" on-tapped="reactToChoice"></menu-options>
+		    <toggle-button opened="{{!_isOpen(open)}}" on-tapped="toggle"></toggle-button>
+		</div>
+	</template>
+	<script>
+		Polymer({
+			is: 'attachment-picker',
+
+			behaviors: [
+		      Polymer.NeonAnimationRunnerBehavior
+		    ],
+
+		    listeners: {
+		      'neon-animation-finish': '_onNeonAnimationFinish'
+		    },
+
+			properties: {
+				open: {
+					value: true
+				}
+			},
+			_onNeonAnimationFinish: function(){
+				console.log("It's all done!");
+			},
+			_addIsOpenClass: function(open){
+				return !open ? "open" : "";
+			},
+			_isOpen: function(open){
+				return open;
+			},
+			_getPage: function(open){
+				return open ? 1 : 0;
+			},
+			reactToChoice: function(e){
+				var selection = e.detail.choice;
+				switch(selection){
+					case '1':
+						console.log("Selected image!");
+						break;
+					case '2':
+						console.log("Selected gif!");
+						break;
+					case '3':
+						console.log("Selected contact!");
+						break;
+				}
+				this.toggle();
+			},
+			toggle: function(){
+				this.open = ! this.open;
+			}
+		});
+	</script>
+</dom-module>

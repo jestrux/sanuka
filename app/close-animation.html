@@ -1,0 +1,50 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation-behavior.html">
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+
+<script>
+
+  Polymer({
+
+    is: 'close-animation',
+
+    behaviors: [
+      Polymer.NeonAnimationBehavior
+    ],
+
+    configure: function(config) {
+      var node = config.node;
+
+      var translateX, translateY, translate;
+      var toleft = totop = 0;
+      var towidth = toheight = 40;
+      var fromwidth = fromheight = 480;
+      var fromleft = -210;
+      var fromtop = -156;
+
+      translateX = (fromleft + (fromwidth / 2)) - (toleft + (towidth / 2));
+      translateY = (fromtop + (fromheight / 2)) - (totop + (toheight / 2));
+
+      translate = 'translate(' + translateX + 'px,' + translateY + 'px)';
+
+      var size = Math.max(towidth + Math.abs(translateX) / 2, toheight + Math.abs(translateY) / 2);
+      var diameter = Math.sqrt(size * size / 2);
+      var scaleX = diameter / towidth;
+      var scaleY = diameter / toheight;
+      var scale = 'scale(' + scaleX + ',' + scaleY + ')';
+      var translate = 'translate(' + -180 + 'px,' + 10 + 'px)';
+
+      this._effect = new KeyframeEffect(node, [
+        {'opacity': 1, 'transform': 'translate(-150px, -150px) scale(1)'},
+        {'opacity': 0, 'transform': 'translate(0) scale(0.1176)'}
+      ], this.timingFromConfig(config));
+
+      this.setPrefixedProperty(node, 'transformOrigin', '0 0');
+      // node.style.borderRadius = '50%';
+
+      return this._effect;
+    }
+
+  });
+
+</script>

@@ -1,0 +1,138 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<dom-module id="chat-bubble">
+	<template>
+		<style>
+			:host {
+				@apply(--layout-horizontal);
+				@apply(--layout-center);
+				margin: 5px 0;
+			  	position: relative;
+				height: auto;
+			}
+			.the-bubble{
+				display: block;
+				padding: 5px 10px;
+				background-color: #ef33da;
+				border-radius: var(--bubble-radius, 15px);
+				margin-left: auto;
+				margin-right: 10px;
+				position: relative;
+				max-width: calc(100% - 90px);
+
+				background-color: #ef33da;
+				color: #fff;
+				margin-right: auto;
+				margin-left: 10px;
+			}
+			:host(.mine){
+				@apply(--layout-horizontal-reverse);
+			}
+			:host(.mine) .avatar{
+				display: none;
+			}
+			.avatar{
+				margin-left: 8px;
+				height: 35px; width: 35px;
+				line-height: 35px; text-align: center;
+				@apply(--bubble-dp);
+				background-color: #ecc3ac;
+			}
+			:host(.mine) .avatar{
+				margin-left: 0;
+				margin-right: 8px;
+				background-color: #e6ccff;
+			}
+			:host(.mine) .the-bubble{
+				margin-left: 0;
+				margin-right: 10px;
+				background-color: #ffffe0;
+				color: inherit;
+			}
+
+			.the-bubble p{
+				display: block;
+				margin-bottom:8px; margin-right:9px;
+				max-width: 100%;
+				word-wrap: break-word;
+			}
+			.the-time{
+				position: absolute;
+				bottom: 2px; right:10px;
+				font-size:9px; color: inherit;
+			}
+
+			:host(.mine) .the-bubble p{
+				margin-left:9px;
+				margin-right: 0;
+			}
+
+			:host(.mine) .the-time{
+				left:10px;
+				right: 0;
+			}
+
+			:host(.mine) h3{
+				display: none;
+			}
+
+			p, h3{
+				margin: 0;
+				font-size: 13px;
+			}
+		</style>
+		<div class="dp-container">
+			<div class="avatar" styl$="background: {{bg}};">
+				{{firstLetter(sender.name)}}
+			</div>
+		</div>
+  		<div id="bubble" class="the-bubble">
+  			<template is="dom-if" if={{ingroup}}>
+  				<h3>Walter</h3>
+  			</template>
+	  		<p style$="font-size: {{_getSize(weight)}};">
+	  			{{content}}
+	  		</p>
+	  		<span class="the-time">{{humanDiffString(timestamp)}}</span>
+		</div>
+	</template>
+	<script>
+		Polymer({
+			is : 'chat-bubble',
+			properties: {
+				sender : String,
+				timestamp  : Number,
+				content : String,
+				ingroup : {
+					type: Boolean,
+					value: false
+				},
+				mine : {
+					type: Boolean,
+					value: true,
+					observer: "mineChanged"
+				},
+				weight : {
+					type: Number,
+					value: 8
+				}
+			},
+			mineChanged: function(){
+				console.log(this.mine);
+			},
+			firstLetter : function(string){
+				var letter = string.substring(0, 1);
+				return letter.toUpperCase();
+			},
+			humanDiffString : function(timestamp){
+				var date = new Date(timestamp);
+				return date.getHours() + ":" + date.getMinutes();
+			},
+			_getSize: function(weight){
+				var w = Math.min(22, Math.max(5, weight));
+
+		        return parseFloat(1.8 * w) + "px";
+		    }
+		});
+	</script>
+</dom-module>

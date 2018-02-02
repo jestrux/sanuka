@@ -1,0 +1,45 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation-behavior.html">
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+
+<script>
+
+  Polymer({
+
+    is: 'icon-open-animation',
+
+    behaviors: [
+      Polymer.NeonAnimationBehavior
+    ],
+
+    configure: function(config) {
+      var node = config.node;
+      this._effect = new KeyframeEffect(node, [
+        {'transform': 'translate(-240px, 240px) scale(0.1)'},
+        {'transform': 'translate(-238px, 238px) scale(0.1)'}
+      ], this.timingFromConfig(config));
+      return this._effect;
+    }
+
+  });
+
+  Polymer({
+
+    is: 'icon-close-animation',
+
+    behaviors: [
+      Polymer.NeonAnimationBehavior
+    ],
+
+    configure: function(config) {
+      var node = config.node;
+      this._effect = new KeyframeEffect(node, [
+        {opacity: 0, 'transform': 'rotate(-80deg) translate(0, 0) scale(1)'},
+        {opacity: 1, 'transform': 'rotate(0deg) translate(-25px, 25px) scale(8.43)'}
+      ], this.timingFromConfig(config));
+      return this._effect;
+    }
+
+  });
+
+</script>

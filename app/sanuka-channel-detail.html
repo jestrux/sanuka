@@ -1,0 +1,65 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="empty-screen.html">
+<link rel="import" href="sanuka-conversation.html">
+<link rel="import" href="new-chat.html">
+
+<dom-module id="sanuka-channel-detail">
+  <template>
+    <style>
+      :host {
+        @apply(--layout-vertical);
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      new-chat{
+        position: absolute;
+        bottom: 0;
+      }
+      sanuka-conversation{
+        position: relative;
+        padding: 20px 0;
+        height: calc(100% - 170px) !important;
+      }
+    </style>
+
+    <div class="toolbar">
+      <div class="avatar no-default" style$="background: {{channel.color}}; margin-right:7px"></div>
+      <span class="title">
+        <span>{{channel.name}}</span>
+        <!-- <em>online</em> -->
+      </span>
+    </div>
+
+    <sanuka-conversation
+      class="content-area"
+      texts="{{channel.texts}}"
+      forgroup="true"
+      user="{{user}}">
+      </sanuka-conversation>
+
+    <new-chat id="newchat" on-message-submit="onTextSubmit"></new-chat>
+  </template>
+  <script>
+    Polymer({
+      is: 'sanuka-channel-detail',
+      properties: {
+        channel: {
+          notify: true,
+          type: Object,
+          observer: "channelChanged"
+        }
+      },
+      channelChanged: function(){
+        console.log(this.channel);
+      },
+      onTextSubmit: function(e){
+        var text = e.detail.chat;
+        text.mine = "mine";
+
+        this.fire('newtext', {text: text});
+      }
+    });
+  </script>
+</dom-module>
